@@ -5,7 +5,6 @@ import Data.Time.Calendar
 import Data.Time.Format
 import Data.Time.LocalTime
 import Data.List
-import System.Locale
 import Options.Applicative
 
 showInterval :: Maybe DiffTime -> String
