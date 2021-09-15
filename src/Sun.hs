@@ -116,12 +116,12 @@ findNoon l d = findNoonBin l time1 time2
                   timeMid = addUTCTime (diffUTCTime t2 t1 / 2) t1
                   elevMid = sunElev l (j2000 timeMid)
                 
-sunBinSearch :: Location -> UTCTime -> UTCTime -> Maybe UTCTime
-sunBinSearch l time1 time2
-    | elev1 * elev2 > 0 = Nothing
+sunBinSearch :: Double -> Location -> UTCTime -> UTCTime -> Maybe UTCTime
+sunBinSearch x l time1 time2
+    | (elev1 - x) * (elev2 - x) > 0 = Nothing
     | diffUTCTime time2 time1 < diffThreshold = Just time1
-    | elev1 * elevMid <= 0 = sunBinSearch l time1 timeMid
-    | elevMid * elev2 <= 0 = sunBinSearch l timeMid time2
+    | (elev1 - x) * (elevMid - x) <= 0 = sunBinSearch x l time1 timeMid
+    | (elevMid - x) * (elev2 - x) <= 0 = sunBinSearch x l timeMid time2
     | otherwise = Nothing
     where elev1 = sunElev l (j2000 time1)
           elev2 = sunElev l (j2000 time2)
@@ -129,13 +129,13 @@ sunBinSearch l time1 time2
           elevMid = sunElev l (j2000 timeMid)
 
 sunrise :: Location -> Day -> Maybe UTCTime
-sunrise l d = sunBinSearch l midnight noon
+sunrise l d = sunBinSearch (-0.75) l midnight noon
     where
         noon = findNoon l d
         midnight = addUTCTime (-43200) noon
 
 sunset :: Location -> Day -> Maybe UTCTime
-sunset l d = sunBinSearch l noon midnight
+sunset l d = sunBinSearch (-0.75) l noon midnight
     where
         noon = findNoon l d
         midnight = addUTCTime 43200 noon
