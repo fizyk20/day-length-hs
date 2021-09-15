@@ -5,6 +5,7 @@ import Data.Time.Calendar
 import Data.Time.Format
 import Data.Time.LocalTime
 import Data.List
+import Numeric
 import Options.Applicative
 
 showInterval :: Maybe DiffTime -> String
@@ -21,6 +22,10 @@ showTime (Just x) = formatTime defaultTimeLocale "%T" x
 showDate :: (FormatTime t) => Maybe t -> String
 showDate Nothing = "Nothing"
 showDate (Just x) = formatTime defaultTimeLocale "%F" x
+
+showAzim :: Maybe Double -> String
+showAzim Nothing = "Nothing"
+showAzim (Just x) = showFFloat (Just 1) x ""
 
 newtype MDay = MDay (Maybe Day)
     
@@ -95,11 +100,16 @@ genDayList x my@(MDay (Just y))
     
 formatLine :: TimeZone -> Location -> Day -> String
 formatLine tz l d = showDate date ++ ": rise " ++ showTime rise
-    ++ ", set " ++ showTime set ++ ", length = " ++ showInterval len
+    ++ " (" ++ showAzim rise_azim ++ "°), set " ++ showTime set
+    ++ " (" ++ showAzim set_azim ++ "°), length = " ++ showInterval len
     where
         date = Just $ LocalTime d midnight
-        rise = utcToLocalTime tz <$> sunrise l d
-        set = utcToLocalTime tz <$> sunset l d
+        rise_utc = sunrise l d
+        rise = utcToLocalTime tz <$> rise_utc
+        rise_azim = sunAzim l <$> j2000 <$> rise_utc
+        set_utc = sunset l d
+        set = utcToLocalTime tz <$> set_utc
+        set_azim = sunAzim l <$> j2000 <$> set_utc
         len = dayLength l d
 
 main = do
